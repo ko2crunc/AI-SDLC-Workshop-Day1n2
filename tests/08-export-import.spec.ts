@@ -3,6 +3,15 @@ import { TodoAppHelpers } from './helpers';
 import * as fs from 'fs';
 import * as path from 'path';
 
+interface ExportedTodo {
+  title: string;
+  priority?: string;
+  due_date?: string;
+  completed?: boolean;
+  is_recurring?: boolean;
+  recurrence_pattern?: string;
+}
+
 /**
  * Export and Import Tests
  * Based on USER_GUIDE.md Section 11: Export & Import
@@ -74,13 +83,13 @@ test.describe('Export Functionality', () => {
 
     if (downloadPath) {
       const content = fs.readFileSync(downloadPath, 'utf-8');
-      const data = JSON.parse(content);
+      const data = JSON.parse(content) as ExportedTodo[];
 
       // Should be an array
       expect(Array.isArray(data)).toBeTruthy();
 
       // Should contain our todo
-      const todo = data.find((t: any) => t.title === todoTitle);
+      const todo = data.find((t) => t.title === todoTitle);
       expect(todo).toBeDefined();
       expect(todo.priority).toBe('high');
       expect(todo.due_date).toBeDefined();
@@ -127,11 +136,11 @@ test.describe('Export Functionality', () => {
 
     if (downloadPath) {
       const content = fs.readFileSync(downloadPath, 'utf-8');
-      const data = JSON.parse(content);
+      const data = JSON.parse(content) as ExportedTodo[];
 
       // Should have both todos
-      const activeTodo = data.find((t: any) => t.title === todo1);
-      const completedTodo = data.find((t: any) => t.title === todo2);
+      const activeTodo = data.find((t) => t.title === todo1);
+      const completedTodo = data.find((t) => t.title === todo2);
 
       expect(activeTodo).toBeDefined();
       expect(completedTodo).toBeDefined();
@@ -156,9 +165,9 @@ test.describe('Export Functionality', () => {
 
     if (downloadPath) {
       const content = fs.readFileSync(downloadPath, 'utf-8');
-      const data = JSON.parse(content);
+      const data = JSON.parse(content) as ExportedTodo[];
 
-      const todo = data.find((t: any) => t.title === recurringTitle);
+      const todo = data.find((t) => t.title === recurringTitle);
       expect(todo.is_recurring).toBeTruthy();
       expect(todo.recurrence_pattern).toBe('weekly');
     }
@@ -390,13 +399,13 @@ test.describe('Export-Import Round Trip', () => {
     if (exportPath) {
       // Read exported data
       const exportedContent = fs.readFileSync(exportPath, 'utf-8');
-      const exportedData = JSON.parse(exportedContent);
+      const exportedData = JSON.parse(exportedContent) as ExportedTodo[];
 
       // Verify structure
       expect(Array.isArray(exportedData)).toBeTruthy();
 
-      const exportedTodo1 = exportedData.find((t: any) => t.title === todo1);
-      const exportedTodo2 = exportedData.find((t: any) => t.title === todo2);
+      const exportedTodo1 = exportedData.find((t) => t.title === todo1);
+      const exportedTodo2 = exportedData.find((t) => t.title === todo2);
 
       expect(exportedTodo1.priority).toBe('high');
       expect(exportedTodo1.completed).toBeFalsy();

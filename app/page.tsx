@@ -25,11 +25,6 @@ interface Subtask {
   created_at: string;
 }
 
-interface SubtaskTemplate {
-  title: string;
-  position: number;
-}
-
 interface Template {
   id: number;
   user_id: number;
@@ -68,8 +63,22 @@ interface Todo {
   tags?: Tag[];
 }
 
+interface FilterPresetFilters {
+  searchQuery: string;
+  priorityFilter: 'all' | Priority;
+  tagFilter: number | null;
+  dateRangeStart: string;
+  dateRangeEnd: string;
+  completionFilter: 'all' | 'completed' | 'incomplete';
+}
+
+interface FilterPreset {
+  name: string;
+  filters: FilterPresetFilters;
+}
+
 export default function Home() {
-  const { permission, isEnabled, requestPermission } = useNotifications();
+  const { isEnabled, requestPermission } = useNotifications();
   const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodo, setNewTodo] = useState('');
   const [newDueDate, setNewDueDate] = useState('');
@@ -112,7 +121,7 @@ export default function Home() {
   const [dateRangeStart, setDateRangeStart] = useState('');
   const [dateRangeEnd, setDateRangeEnd] = useState('');
   const [completionFilter, setCompletionFilter] = useState<'all' | 'completed' | 'incomplete'>('all');
-  const [savedFilters, setSavedFilters] = useState<Array<{name: string, filters: any}>>([]);
+  const [savedFilters, setSavedFilters] = useState<FilterPreset[]>([]);
   const [showSaveFilterModal, setShowSaveFilterModal] = useState(false);
   const [filterPresetName, setFilterPresetName] = useState('');
 
@@ -395,7 +404,7 @@ export default function Home() {
     setShowSaveFilterModal(false);
   };
 
-  const applyFilterPreset = (preset: any) => {
+  const applyFilterPreset = (preset: FilterPreset) => {
     setSearchQuery(preset.filters.searchQuery || '');
     setPriorityFilter(preset.filters.priorityFilter || 'all');
     setTagFilter(preset.filters.tagFilter || null);
@@ -472,7 +481,7 @@ export default function Home() {
     }
   };
 
-  const useTemplate = async (templateId: number) => {
+  const applyTemplate = async (templateId: number) => {
     try {
       const res = await fetch(`/api/templates/${templateId}/use`, {
         method: 'POST',
@@ -1096,7 +1105,7 @@ export default function Home() {
                   <select
                     onChange={(e) => {
                       if (e.target.value) {
-                        useTemplate(Number(e.target.value));
+                        void applyTemplate(Number(e.target.value));
                         e.target.value = '';
                       }
                     }}
@@ -1932,7 +1941,7 @@ export default function Home() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => {
-                          useTemplate(template.id);
+                          void applyTemplate(template.id);
                           setShowTemplateModal(false);
                         }}
                         className="px-3 py-1 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
@@ -2228,7 +2237,7 @@ export default function Home() {
                 Current Filters:
               </p>
               <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                {searchQuery && <li>• Search: "{searchQuery}"</li>}
+                {searchQuery && <li>• Search: &quot;{searchQuery}&quot;</li>}
                 {priorityFilter !== 'all' && <li>• Priority: {priorityFilter}</li>}
                 {tagFilter !== null && <li>• Tag: {tags.find(t => t.id === tagFilter)?.name}</li>}
                 {completionFilter !== 'all' && <li>• Status: {completionFilter}</li>}

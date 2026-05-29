@@ -35,10 +35,13 @@ export class TodoAppHelpers {
     await this.page.addInitScript(() => {
       // Mock WebAuthn if needed for testing
       if (!navigator.credentials) {
-        (navigator as any).credentials = {
-          create: async () => ({}),
-          get: async () => ({})
-        };
+        Object.defineProperty(window.navigator, 'credentials', {
+          configurable: true,
+          value: {
+            create: async () => ({}),
+            get: async () => ({})
+          }
+        });
       }
     });
   }

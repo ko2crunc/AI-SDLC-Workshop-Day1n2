@@ -3,9 +3,17 @@
 import { useEffect, useCallback, useState } from 'react';
 import { getSingaporeNow, formatSingaporeDate } from '@/lib/timezone';
 
+function getNotificationPermission(): NotificationPermission {
+  if (typeof window === 'undefined' || !('Notification' in window)) {
+    return 'default';
+  }
+
+  return Notification.permission;
+}
+
 export function useNotifications() {
-  const [permission, setPermission] = useState<NotificationPermission>('default');
-  const [isEnabled, setIsEnabled] = useState(false);
+  const [permission, setPermission] = useState<NotificationPermission>(getNotificationPermission);
+  const [isEnabled, setIsEnabled] = useState(() => getNotificationPermission() === 'granted');
 
   // Request notification permission
   const requestPermission = useCallback(async () => {
@@ -99,14 +107,6 @@ export function useNotifications() {
       console.error('Error checking notifications:', error);
     }
   }, [isEnabled, showNotification]);
-
-  // Initialize permission state
-  useEffect(() => {
-    if ('Notification' in window) {
-      setPermission(Notification.permission);
-      setIsEnabled(Notification.permission === 'granted');
-    }
-  }, []);
 
   // Set up periodic checking
   useEffect(() => {

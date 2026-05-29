@@ -4,6 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Please try again.';
+}
+
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
@@ -50,9 +54,9 @@ export default function LoginPage() {
 
       // Success - redirect to app
       router.push('/');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Registration error:', err);
-      setError(err.message || 'Registration failed. Please try again.');
+      setError(getErrorMessage(err) || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -97,9 +101,9 @@ export default function LoginPage() {
 
       // Success - redirect to app
       router.push('/');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Login error:', err);
-      setError(err.message || 'Login failed. Please try again.');
+      setError(getErrorMessage(err) || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -155,13 +159,13 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full px-4 py-2 text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
           >
-            {isRegistering ? 'Already have an account? Sign in' : "Don't have an account? Register"}
+            {isRegistering ? 'Already have an account? Sign in' : 'Don&apos;t have an account? Register'}
           </button>
         </form>
 
         <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
           <p className="text-xs text-gray-600 dark:text-gray-400">
-            <strong>Passkeys</strong> use your device's biometrics (fingerprint, face recognition) or PIN for secure authentication.
+            <strong>Passkeys</strong> use your device&apos;s biometrics (fingerprint, face recognition) or PIN for secure authentication.
             No passwords needed!
           </p>
         </div>
