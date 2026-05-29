@@ -22,7 +22,8 @@ test.describe('Authentication', () => {
   test('should display login page', async ({ page }) => {
     await page.goto('/login');
     await expect(page).toHaveTitle(/Todo App/);
-    await expect(page.locator('text=Login')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Todo App' })).toBeVisible();
+    await expect(page.getByText('Sign in with your passkey')).toBeVisible();
   });
 
   test('should have username input field', async ({ page }) => {
@@ -34,78 +35,41 @@ test.describe('Authentication', () => {
 
   test('should require username for login', async ({ page }) => {
     await page.goto('/login');
-    const loginButton = page.locator('button:text("Login")');
-
-    // Try to login without username
-    if (await loginButton.isVisible()) {
-      // Button should be disabled or show error
-      const usernameInput = page.locator('input[type="text"]');
-      await expect(usernameInput).toBeEmpty();
-    }
+    const usernameInput = page.locator('input[type="text"]');
+    await expect(usernameInput).toBeEmpty();
+    await expect(usernameInput).toHaveAttribute('required', '');
   });
 
-  test('should navigate to register page', async ({ page }) => {
+  test('should switch to register mode', async ({ page }) => {
     await page.goto('/login');
-    const registerLink = page.locator('a:text("Register")');
-
-    if (await registerLink.isVisible()) {
-      await registerLink.click();
-      await expect(page).toHaveURL(/.*register/);
-    }
+    await page.getByRole('button', { name: /Register/ }).click();
+    await expect(page.getByRole('button', { name: 'Register with Passkey' })).toBeVisible();
   });
 
   test('should show logout button when authenticated', async ({ page }) => {
-    // Note: This test assumes we can authenticate
-    // In real scenario, you'd need to handle WebAuthn flow
+    await helpers.createSessionDirectly();
     await page.goto('/');
-
-    // Check if Logout button exists
-    const logoutButton = page.locator('button:text("Logout")');
-    const isAuthenticated = await logoutButton.isVisible();
-
-    if (isAuthenticated) {
-      await expect(logoutButton).toBeVisible();
-    }
+    await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible();
   });
 
   test('should display username when logged in', async ({ page }) => {
+    await helpers.createSessionDirectly();
     await page.goto('/');
-
-    // Check for welcome message with username
-    const welcomeMessage = page.locator('text=/Welcome/i');
-    const hasWelcome = await welcomeMessage.count() > 0;
-
-    if (hasWelcome) {
-      await expect(welcomeMessage).toBeVisible();
-    }
+    await expect(page.getByText(helpers.testUsername)).toBeVisible();
   });
 
   test('should logout successfully', async ({ page }) => {
+    await helpers.createSessionDirectly();
     await page.goto('/');
-
-    const logoutButton = page.locator('button:text("Logout")');
-
-    if (await logoutButton.isVisible()) {
-      await logoutButton.click();
-
-      // Should redirect to login page
-      await expect(page).toHaveURL(/.*login/);
-    }
+    await page.getByRole('button', { name: 'Logout' }).click();
+    await expect(page).toHaveURL(/.*login/);
   });
 
   test('should persist session across page reloads', async ({ page }) => {
+    await helpers.createSessionDirectly();
     await page.goto('/');
-
-    const logoutButton = page.locator('button:text("Logout")');
-    const isAuthenticated = await logoutButton.isVisible();
-
-    if (isAuthenticated) {
-      // Reload page
-      await page.reload();
-
-      // Should still be authenticated
-      await expect(logoutButton).toBeVisible();
-    }
+    await page.reload();
+    await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible();
   });
 
   test('should redirect to login when not authenticated', async ({ page, context }) => {
@@ -120,7 +84,7 @@ test.describe('Authentication', () => {
     });
 
     const isLoginPage = page.url().includes('login') ||
-      await page.locator('text=Login').isVisible();
+      await page.getByText('Sign in with your passkey').isVisible();
 
     expect(isLoginPage).toBeTruthy();
   });

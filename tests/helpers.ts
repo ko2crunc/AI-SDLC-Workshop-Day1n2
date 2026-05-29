@@ -6,7 +6,17 @@ import { Page, expect } from '@playwright/test';
  */
 
 export class TodoAppHelpers {
-  constructor(public readonly page: Page) {}
+  readonly testUsername: string;
+
+  constructor(public readonly page: Page) {
+    this.testUsername = `playwright-user-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+  }
+
+  private getTodoCard(title: string) {
+    return this.page
+      .getByText(title, { exact: true })
+      .locator('xpath=ancestor::div[contains(@class,"rounded-lg")][1]');
+  }
 
   /**
    * Get current Singapore time + offset minutes
@@ -65,9 +75,7 @@ export class TodoAppHelpers {
   /**
    * Create session via API (alternative to WebAuthn for testing)
    */
-  async createSessionDirectly(username: string = 'playwright-test-user') {
-    // This would require implementing a test endpoint or using existing API
-    // For now, this is a placeholder
+  async createSessionDirectly(username: string = this.testUsername) {
     const response = await this.page.request.post('/api/auth/test-login', {
       data: { username }
     });
@@ -75,12 +83,30 @@ export class TodoAppHelpers {
     if (!response.ok()) {
       throw new Error('Failed to create test session');
     }
+
+    const setCookie = response.headers()['set-cookie'];
+    const match = setCookie?.match(/session=([^;]+)/);
+
+    if (!match) {
+      throw new Error('Missing test session cookie');
+    }
+
+    await this.page.context().addCookies([
+      {
+        name: 'session',
+        value: match[1],
+        url: 'http://localhost:3000',
+        httpOnly: true,
+        sameSite: 'Lax',
+      }
+    ]);
   }
 
   /**
    * Navigate to home page
    */
   async goToHome() {
+    await this.createSessionDirectly();
     await this.page.goto('/');
     await this.page.waitForLoadState('networkidle');
   }
@@ -163,11 +189,12 @@ export class TodoAppHelpers {
     }
   ) {
     // Find and click Edit button for the todo
-    const todoRow = this.page.locator(`text=${originalTitle}`).locator('..').locator('..');
-    await todoRow.locator('button:text("Edit")').click();
+    const todoRow = this.getTodoCard(originalTitle);
+    await todoRow.getByRole('button', { name: 'Edit' }).click();
 
     // Wait for modal
-    await this.page.waitForSelector('text=Edit');
+    const editModal = this.page.getByRole('heading', { name: 'Edit Todo' });
+    await expect(editModal).toBeVisible();
 
     // Update title
     if (updates.title) {
@@ -189,15 +216,15 @@ export class TodoAppHelpers {
     await this.page.click('button:text("Update")');
 
     // Wait for modal to close
-    await this.page.waitForSelector('text=Edit', { state: 'hidden' });
+    await expect(editModal).toBeHidden();
   }
 
   /**
    * Delete todo
    */
   async deleteTodo(title: string) {
-    const todoRow = this.page.locator(`text=${title}`).locator('..').locator('..');
-    await todoRow.locator('button:text("Delete")').click();
+    const todoRow = this.getTodoCard(title);
+    await todoRow.getByRole('button', { name: 'Delete' }).click();
 
     // Wait for todo to disappear
     await this.page.waitForSelector(`text=${title}`, { state: 'hidden' });
@@ -207,7 +234,7 @@ export class TodoAppHelpers {
    * Complete/uncomplete todo
    */
   async toggleTodoComplete(title: string) {
-    const todoRow = this.page.locator(`text=${title}`).locator('..').locator('..');
+    const todoRow = this.getTodoCard(title);
     const checkbox = todoRow.locator('input[type="checkbox"]').first();
     await checkbox.click();
   }
@@ -216,8 +243,8 @@ export class TodoAppHelpers {
    * Expand subtasks section
    */
   async expandSubtasks(todoTitle: string) {
-    const todoRow = this.page.locator(`text=${todoTitle}`).locator('..').locator('..');
-    await todoRow.locator('button:has-text("Subtasks")').click();
+    const todoRow = this.getTodoCard(todoTitle);
+    await todoRow.getByRole('button', { name: /Subtasks/ }).click();
   }
 
   /**
@@ -228,10 +255,10 @@ export class TodoAppHelpers {
     await this.expandSubtasks(todoTitle);
 
     // Find the subtask input within the todo section
-    const todoRow = this.page.locator(`text=${todoTitle}`).locator('..').locator('..').locator('..');
+    const todoRow = this.getTodoCard(todoTitle);
     const subtaskInput = todoRow.locator('input[placeholder*="Add subtask"]');
     await subtaskInput.fill(subtaskTitle);
-    await todoRow.locator('button:text("Add")').last().click();
+    await todoRow.getByRole('button', { name: 'Add' }).last().click();
 
     // Wait for subtask to appear
     await this.page.waitForSelector(`text=${subtaskTitle}`);
@@ -482,15 +509,15 @@ export class TodoAppHelpers {
    * Verify priority badge
    */
   async verifyPriorityBadge(todoTitle: string, priority: 'High' | 'Medium' | 'Low') {
-    const todoRow = this.page.locator(`text=${todoTitle}`).locator('..').locator('..');
-    await expect(todoRow.locator(`text=${priority}`)).toBeVisible();
+    const todoRow = this.getTodoCard(todoTitle);
+    await expect(todoRow.locator('span').filter({ hasText: new RegExp(`^${priority}$`) })).toBeVisible();
   }
 
   /**
    * Verify recurring badge
    */
   async verifyRecurringBadge(todoTitle: string, pattern: string) {
-    const todoRow = this.page.locator(`text=${todoTitle}`).locator('..').locator('..');
+    const todoRow = this.getTodoCard(todoTitle);
     await expect(todoRow.locator(`text=🔄`)).toBeVisible();
     await expect(todoRow.locator(`text=${pattern}`)).toBeVisible();
   }
@@ -499,7 +526,7 @@ export class TodoAppHelpers {
    * Verify reminder badge
    */
   async verifyReminderBadge(todoTitle: string) {
-    const todoRow = this.page.locator(`text=${todoTitle}`).locator('..').locator('..');
+    const todoRow = this.getTodoCard(todoTitle);
     await expect(todoRow.locator(`text=🔔`)).toBeVisible();
   }
 
@@ -507,7 +534,7 @@ export class TodoAppHelpers {
    * Verify tag on todo
    */
   async verifyTag(todoTitle: string, tagName: string) {
-    const todoRow = this.page.locator(`text=${todoTitle}`).locator('..').locator('..');
+    const todoRow = this.getTodoCard(todoTitle);
     await expect(todoRow.locator(`text=${tagName}`)).toBeVisible();
   }
 
@@ -515,7 +542,7 @@ export class TodoAppHelpers {
    * Get progress percentage
    */
   async getProgressPercentage(todoTitle: string): Promise<number> {
-    const todoRow = this.page.locator(`text=${todoTitle}`).locator('..').locator('..');
+    const todoRow = this.getTodoCard(todoTitle);
     const progressText = await todoRow.locator('text=/\\d+\\/\\d+ subtasks/').textContent();
 
     if (!progressText) return 0;

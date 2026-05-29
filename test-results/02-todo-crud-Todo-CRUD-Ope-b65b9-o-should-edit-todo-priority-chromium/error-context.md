@@ -1,0 +1,83 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - main [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - heading "Todo App" [level=1] [ref=e7]
+          - paragraph [ref=e8]: Welcome, playwright-user-1780047510906-5380
+        - generic [ref=e9]:
+          - button "⋮ Data" [ref=e11]:
+            - generic [ref=e12]: ⋮
+            - text: Data
+          - link "Calendar" [ref=e13] [cursor=pointer]:
+            - /url: /calendar
+          - button "📋 Templates" [ref=e14]
+          - button "🔔" [ref=e15]
+          - button "Logout" [ref=e16]
+      - generic [ref=e18]:
+        - generic [ref=e19]:
+          - textbox "Add a new todo..." [ref=e20]
+          - combobox [ref=e21]:
+            - option "High" [selected]
+            - option "Medium"
+            - option "Low"
+          - textbox [ref=e22]
+          - button "Add" [ref=e23]
+        - generic [ref=e24]:
+          - generic [ref=e25] [cursor=pointer]:
+            - checkbox "Repeat" [ref=e26]
+            - generic [ref=e27]: Repeat
+          - generic [ref=e28]:
+            - generic [ref=e29]: "Reminder:"
+            - combobox [disabled] [ref=e30]:
+              - option "None" [selected]
+              - option "15 minutes before"
+              - option "30 minutes before"
+              - option "1 hour before"
+              - option "2 hours before"
+              - option "1 day before"
+              - option "2 days before"
+              - option "1 week before"
+        - generic [ref=e32]:
+          - generic [ref=e33]: "Use Template:"
+          - combobox [ref=e34]:
+            - option "Select a template..." [selected]
+      - generic [ref=e35]:
+        - generic [ref=e36]:
+          - textbox "Search todos and subtasks..." [ref=e37]
+          - img [ref=e38]
+        - generic [ref=e40]:
+          - combobox [ref=e41]:
+            - option "All Priorities" [selected]
+            - option "High Priority"
+            - option "Medium Priority"
+            - option "Low Priority"
+          - button "▶ Advanced" [ref=e42]
+      - generic [ref=e43]:
+        - heading "Pending (1)" [level=2] [ref=e44]
+        - generic [ref=e47]:
+          - checkbox [ref=e48]
+          - generic [ref=e50]:
+            - generic [ref=e51]: Priority Change Todo 1780047511885
+            - generic [ref=e52]: Low
+            - text: "0"
+          - button "▶ Subtasks" [ref=e53]
+          - button "Edit" [ref=e54]
+          - button "Delete" [ref=e55]
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - generic [ref=e59]: "0"
+          - generic [ref=e60]: Overdue
+        - generic [ref=e61]:
+          - generic [ref=e62]: "1"
+          - generic [ref=e63]: Pending
+        - generic [ref=e64]:
+          - generic [ref=e65]: "0"
+          - generic [ref=e66]: Completed
+  - button "Open Next.js Dev Tools" [ref=e72] [cursor=pointer]:
+    - img [ref=e73]
+  - alert [ref=e76]
+```
