@@ -92,10 +92,14 @@ export function useNotifications() {
       const res = await fetch('/api/notifications/check');
       const todos: Todo[] = await res.json();
       todos.forEach(todo => {
-        new Notification(todo.title, {
-          body: `Due: ${formatSingaporeDate(todo.due_date!)}`,
-          icon: '/favicon.ico',
-        });
+        // body: "Due in X minutes" for imminent reminders, or formatted date for longer lead times
+        const minutesUntilDue = Math.round(
+          (new Date(todo.due_date!).getTime() - getSingaporeNow().getTime()) / 60_000
+        );
+        const body = minutesUntilDue <= 60
+          ? `Due in ${minutesUntilDue} minute${minutesUntilDue !== 1 ? 's' : ''}`
+          : `Due: ${formatSingaporeDate(todo.due_date!)}`;
+        new Notification(todo.title, { body, icon: '/favicon.ico' });
       });
     };
 

@@ -221,7 +221,7 @@ async function exportTodos() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `todos-export-${new Date().toISOString().split('T')[0]}.json`;
+  a.download = `todos-export-${getSingaporeNow().toISOString().split('T')[0]}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
