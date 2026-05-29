@@ -298,7 +298,17 @@ export class TodoAppHelpers {
   async useTemplate(templateName: string) {
     // Open template dropdown
     const templateSelect = this.page.locator('select:near(:text("Use Template"))');
-    await templateSelect.selectOption({ label: new RegExp(templateName) });
+    const optionValue = await templateSelect
+      .locator('option')
+      .filter({ hasText: templateName })
+      .first()
+      .getAttribute('value');
+
+    if (!optionValue) {
+      throw new Error(`Template "${templateName}" not found`);
+    }
+
+    await templateSelect.selectOption(optionValue);
 
     // Wait for todo to be created
     await this.page.waitForTimeout(1000);

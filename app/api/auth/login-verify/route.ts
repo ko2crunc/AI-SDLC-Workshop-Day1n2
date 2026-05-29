@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuthenticationResponse } from '@simplewebauthn/server';
-import type { AuthenticationResponseJSON } from '@simplewebauthn/types';
+import { isoBase64URL } from '@simplewebauthn/server/helpers';
+import type { AuthenticationResponseJSON } from '@simplewebauthn/server';
 import { userDB, authenticatorDB } from '@/lib/db';
 import { createSession } from '@/lib/auth';
 
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
           expectedRPID: rpID,
           credential: {
             publicKey: Buffer.from(singleAuth.credential_public_key, 'base64'),
-            id: Buffer.from(singleAuth.credential_id, 'base64'),
+            id: isoBase64URL.fromBuffer(Buffer.from(singleAuth.credential_id, 'base64')),
             counter: singleAuth.counter ?? 0,
           },
           requireUserVerification: false,
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
       expectedRPID: rpID,
       credential: {
         publicKey: Buffer.from(authenticator.credential_public_key, 'base64'),
-        id: Buffer.from(authenticator.credential_id, 'base64'),
+        id: isoBase64URL.fromBuffer(Buffer.from(authenticator.credential_id, 'base64')),
         counter: authenticator.counter ?? 0,
       },
       requireUserVerification: false,

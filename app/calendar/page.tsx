@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getSingaporeNow } from '@/lib/timezone';
 
@@ -28,7 +28,29 @@ export default function CalendarPage() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1;
 
-  const fetchHolidays = useCallback(async () => {
+  useEffect(() => {
+    let active = true;
+
+    const loadHolidays = async () => {
+      try {
+        const res = await fetch(`/api/holidays?year=${year}&month=${month}`);
+        const data = await res.json();
+        if (active) {
+          setHolidays(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch holidays:', error);
+      }
+    };
+
+    void loadHolidays();
+
+    return () => {
+      active = false;
+    };
+  }, [month, year]);
+
+  const fetchHolidays = async () => {
     try {
       const res = await fetch(`/api/holidays?year=${year}&month=${month}`);
       const data = await res.json();
@@ -36,11 +58,7 @@ export default function CalendarPage() {
     } catch (error) {
       console.error('Failed to fetch holidays:', error);
     }
-  }, [month, year]);
-
-  useEffect(() => {
-    void fetchHolidays();
-  }, [fetchHolidays]);
+  };
 
   const getDaysInMonth = (year: number, month: number) => {
     return new Date(year, month, 0).getDate();
