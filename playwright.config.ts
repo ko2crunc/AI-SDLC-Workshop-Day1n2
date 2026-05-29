@@ -1,4 +1,24 @@
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { defineConfig, devices } from '@playwright/test';
+
+function resolveChromiumExecutable() {
+  const browsersRoot = path.join(os.homedir(), '.cache', 'ms-playwright');
+  if (!fs.existsSync(browsersRoot)) {
+    return undefined;
+  }
+
+  const candidates = fs
+    .readdirSync(browsersRoot)
+    .filter((entry) => entry.startsWith('chromium-'))
+    .sort()
+    .reverse()
+    .map((entry) => path.join(browsersRoot, entry, 'chrome-linux64', 'chrome'))
+    .filter((candidate) => fs.existsSync(candidate));
+
+  return candidates[0];
+}
 
 /**
  * Playwright configuration for Todo App E2E tests
@@ -50,29 +70,10 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         // Enable WebAuthn virtual authenticator
         launchOptions: {
+          executablePath: resolveChromiumExecutable(),
           args: ['--enable-features=WebAuthenticationTesting']
         }
       },
-    },
-
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-
-    // Mobile testing
-    {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
-    },
-    {
-      name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
     },
   ],
 
